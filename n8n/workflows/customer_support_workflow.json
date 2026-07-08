@@ -1,0 +1,188 @@
+{
+  "name": "Customer Support Ticket Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ticket-created",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        -20
+      ],
+      "id": "5bc19596-2d18-467e-9671-9a65fce21340",
+      "name": "Webhook",
+      "webhookId": "86aef08c-a198-4556-946c-e04c381ee2b7"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an AI assistant working for the internal support team.\n\nYour job is ONLY to summarize the customer's issue.\n\nRules:\n- Do NOT ask follow-up questions.\n- Do NOT greet the customer.\n- Do NOT provide troubleshooting.\n- Do NOT apologize.\n- Return only one short professional summary.\n- Maximum 20 words.\n\nCustomer Issue:\n\n{{ $json.body.issue }}",
+        "hasOutputParser": true,
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        360,
+        -380
+      ],
+      "id": "c378114e-3030-42ee-9550-70a618f9f37b",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        380,
+        -160
+      ],
+      "id": "73cb6142-aa17-4a42-bc50-a743b099efdc",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "ADMz5eujS45y9iIu",
+          "name": "Google Gemini(PaLM) Api account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        820,
+        -40
+      ],
+      "id": "269dcd3f-9fcd-45c3-b800-51c96420fa00",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "sendTo": "mallamanideep510@gmail.com",
+        "subject": "=New Support Ticket  {{ $json.body.ticket_id }}",
+        "emailType": "text",
+        "message": "=A new customer support ticket has been created.  Ticket ID: {{ $json.body.ticket_id }}  Status: {{ $json.body.status }}  Customer Issue: {{ $json.body.issue }}  AI Summary: {{ $json.text }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1060,
+        -40
+      ],
+      "id": "a4a4c0ec-cfed-4786-a1a9-c5a2c7b5f919",
+      "name": "Gmail",
+      "webhookId": "26c43055-fed1-4b91-9959-1b292a0d6d58",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "NGFAewiZndeMzmWx",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:8000/api/update_summary/",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"ticket_id\": \"{{ $('Webhook').item.json.body.ticket_id }}\",\n  \"summary\": \"{{ $('Basic LLM Chain').item.json.text }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1280,
+        -40
+      ],
+      "id": "3113b8db-df2e-4a6f-87d3-3f37a8bf3581",
+      "name": "HTTP Request"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Gmail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "46405389-b642-473d-9349-a83d1cf1771a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b7f83210f7ad8a83296a79e95d058536b91b54ad0b6bb8614c72bb75913a3202"
+  },
+  "id": "8THjCliEc9rPzTEZ",
+  "tags": []
+}
