@@ -1,5 +1,4 @@
 # 🤖 AI Customer Support Bot
-
 An AI-powered Customer Support Bot built using **React, Django REST Framework, SQLite, Google Gemini API, and n8n**.
 
 The application allows customers to submit support requests through a chat interface. The backend creates support tickets, AI automatically summarizes customer issues, n8n automates notifications, and the ticket information is stored for support teams.
@@ -504,4 +503,8 @@ LinkedIn:
 https://linkedin.com/in/MANIDEEPMALLA
 
 ---
+
+=======
+# customer-support-bot
+AI-powered Customer Support Bot using React, Django, DRF, Gemini API, SQLite and n8n.
 
